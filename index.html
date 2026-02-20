@@ -6,7 +6,7 @@
   <title>Ram Thatham</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Tektur:wght@400;500;700&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400&display=swap" rel="stylesheet" />
   <style>
     *,
     *::before,
@@ -42,8 +42,8 @@
       position: fixed;
       top: 36px;
       left: 40px;
-      font-family: "Tektur", monospace;
-      font-weight: 700;
+      font-family: "Chakra Petch", sans-serif;
+      font-weight: 400;
       font-size: 28px;
       letter-spacing: 0.04em;
       color: #fff;
@@ -156,27 +156,35 @@
         for (let i = 0; i < ring.length - 1; i++) {
           const [lon1, lat1] = ring[i];
           const [lon2, lat2] = ring[i + 1];
+          // Skip Antarctica region
+          if (lat1 < -60 && lat2 < -60) continue;
           const dist = Math.sqrt((lat2 - lat1) ** 2 + (lon2 - lon1) ** 2);
           const steps = Math.max(1, Math.round(dist / spacing));
           for (let s = 0; s < steps; s++) {
             const t = s / steps;
+            const lat = lat1 + (lat2 - lat1) * t;
+            if (lat < -60) continue;
+            // Randomly thin dots for a scattered particle feel
+            if (Math.random() > 0.4) continue;
             pts.push(latLonToXYZ(
-              lat1 + (lat2 - lat1) * t,
+              lat,
               lon1 + (lon2 - lon1) * t
             ));
           }
         }
         if (ring.length > 0) {
           const last = ring[ring.length - 1];
-          pts.push(latLonToXYZ(last[1], last[0]));
+          if (last[1] >= -60 && Math.random() < 0.4) {
+            pts.push(latLonToXYZ(last[1], last[0]));
+          }
         }
         return pts;
       }
 
       let dots = [];
       const ROTATION_SPEED = 0.0008;
-      const DOT_SIZE = 1.5;
-      const DOT_SPACING = 2;
+      const DOT_SIZE = 1.6;
+      const DOT_SPACING = 3;
 
       let angle = 0;
 
