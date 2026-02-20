@@ -147,14 +147,8 @@
       renderer.setPixelRatio(window.devicePixelRatio);
       container.appendChild(renderer.domElement);
 
-      // ── Orb vertex shader ──
-      var orbVertexShader = [
-        "uniform float uTime;",
-        "varying vec3 vNormal;",
-        "varying vec3 vPosition;",
-        "varying float vDisplacement;",
-        "",
-        "// Classic 3D simplex-style noise (Ashima Arts)",
+      // ── Shared simplex noise (included in vertex shader) ──
+      var noiseGLSL = [
         "vec3 mod289(vec3 x){ return x - floor(x * (1.0/289.0)) * 289.0; }",
         "vec4 mod289(vec4 x){ return x - floor(x * (1.0/289.0)) * 289.0; }",
         "vec4 permute(vec4 x){ return mod289(((x*34.0)+1.0)*x); }",
@@ -201,14 +195,25 @@
         "  vec4 m = max(0.6 - vec4(dot(x0,x0),dot(x1,x1),dot(x2,x2),dot(x3,x3)), 0.0);",
         "  m = m * m;",
         "  return 42.0 * dot(m*m, vec4(dot(p0,x0),dot(p1,x1),dot(p2,x2),dot(p3,x3)));",
-        "}",
+        "}"
+      ].join("\n");
+
+      // ── Shell vertex shader (per-layer noise offset via uniform) ──
+      var shellVertexShader = [
+        "uniform float uTime;",
+        "uniform float uNoiseOffset;",
+        "varying vec3 vNormal;",
+        "varying vec3 vPosition;",
+        "varying float vDisplacement;",
+        "",
+        noiseGLSL,
         "",
         "void main() {",
         "  vNormal = normalize(normalMatrix * normal);",
         "  vec3 pos = position;",
-        "  float noise = snoise(pos * 2.0 + uTime * 0.3);",
-        "  noise += 0.5 * snoise(pos * 4.0 + uTime * 0.5);",
-        "  float displacement = noise * 0.12;",
+        "  float noise = snoise(pos * 5.0 + uTime * 0.25 + uNoiseOffset);",
+        "  noise += 0.5 * snoise(pos * 10.0 + uTime * 0.4 + uNoiseOffset * 1.7);",
+        "  float displacement = noise * 0.04;",
         "  vDisplacement = displacement;",
         "  pos += normal * displacement;",
         "  vPosition = pos;",
@@ -216,9 +221,10 @@
         "}"
       ].join("\n");
 
-      // ── Orb fragment shader ──
-      var orbFragmentShader = [
+      // ── Shell fragment shader (semi-transparent + fresnel) ──
+      var shellFragmentShader = [
         "uniform float uTime;",
+        "uniform float uAlpha;",
         "varying vec3 vNormal;",
         "varying vec3 vPosition;",
         "varying float vDisplacement;",
@@ -231,9 +237,9 @@
         "  float t = sin(uTime * 0.2) * 0.5 + 0.5;",
         "  vec3 baseColor = mix(color1, color2, t + vDisplacement);",
         "  baseColor = mix(baseColor, color3, fresnel * 0.6);",
-        "  float core = smoothstep(0.0, 0.5, 1.0 - fresnel) * 0.8;",
-        "  vec3 finalColor = baseColor * (0.5 + fresnel * 1.5) + vec3(core * 0.15);",
-        "  gl_FragColor = vec4(finalColor, 1.0);",
+        "  vec3 finalColor = baseColor * (0.4 + fresnel * 1.8);",
+        "  float alpha = (fresnel * 0.6 + 0.15) * uAlpha;",
+        "  gl_FragColor = vec4(finalColor, alpha);",
         "}"
       ].join("\n");
 
@@ -261,18 +267,39 @@
         "}"
       ].join("\n");
 
-      // ── Orb mesh ──
-      var orbGeometry = new THREE.SphereGeometry(1, 80, 80);
-      var orbMaterial = new THREE.ShaderMaterial({
-        uniforms: { uTime: { value: 0.0 } },
-        vertexShader: orbVertexShader,
-        fragmentShader: orbFragmentShader,
-      });
-      var orb = new THREE.Mesh(orbGeometry, orbMaterial);
-      scene.add(orb);
+      // ── Create layered transparent shells ──
+      var shellConfigs = [
+        { radius: 0.90, segments: 64, alpha: 0.35, noiseOffset: 0.0 },
+        { radius: 0.97, segments: 64, alpha: 0.30, noiseOffset: 3.3 },
+        { radius: 1.04, segments: 64, alpha: 0.25, noiseOffset: 6.6 },
+        { radius: 1.12, segments: 64, alpha: 0.20, noiseOffset: 10.0 }
+      ];
 
-      // ── Glow mesh (slightly larger, behind orb) ──
-      var glowGeometry = new THREE.SphereGeometry(1.3, 64, 64);
+      var shells = [];
+      var shellMaterials = [];
+
+      shellConfigs.forEach(function (cfg) {
+        var geo = new THREE.SphereGeometry(cfg.radius, cfg.segments, cfg.segments);
+        var mat = new THREE.ShaderMaterial({
+          uniforms: {
+            uTime: { value: 0.0 },
+            uAlpha: { value: cfg.alpha },
+            uNoiseOffset: { value: cfg.noiseOffset }
+          },
+          vertexShader: shellVertexShader,
+          fragmentShader: shellFragmentShader,
+          blending: THREE.AdditiveBlending,
+          transparent: true,
+          depthWrite: false,
+        });
+        var mesh = new THREE.Mesh(geo, mat);
+        scene.add(mesh);
+        shells.push(mesh);
+        shellMaterials.push(mat);
+      });
+
+      // ── Glow mesh (outer halo) ──
+      var glowGeometry = new THREE.SphereGeometry(1.4, 64, 64);
       var glowMaterial = new THREE.ShaderMaterial({
         uniforms: { uTime: { value: 0.0 } },
         vertexShader: glowVertexShader,
@@ -280,6 +307,7 @@
         blending: THREE.AdditiveBlending,
         side: THREE.BackSide,
         transparent: true,
+        depthWrite: false,
       });
       var glow = new THREE.Mesh(glowGeometry, glowMaterial);
       scene.add(glow);
@@ -296,11 +324,13 @@
         requestAnimationFrame(animate);
 
         var elapsed = performance.now() * 0.001;
-        orbMaterial.uniforms.uTime.value = elapsed;
         glowMaterial.uniforms.uTime.value = elapsed;
 
-        orb.rotation.y += 0.002;
-        orb.rotation.x += 0.001;
+        for (var i = 0; i < shells.length; i++) {
+          shellMaterials[i].uniforms.uTime.value = elapsed;
+          shells[i].rotation.y += 0.0015 + i * 0.0005;
+          shells[i].rotation.x += 0.001 + i * 0.0003;
+        }
 
         renderer.render(scene, camera);
       }
