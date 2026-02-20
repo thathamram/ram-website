@@ -198,10 +198,12 @@
         "}"
       ].join("\n");
 
-      // ── Shell vertex shader (per-layer noise offset via uniform) ──
+      // ── Shell vertex shader (per-layer noise offset + mouse interaction) ──
       var shellVertexShader = [
         "uniform float uTime;",
         "uniform float uNoiseOffset;",
+        "uniform vec3 uMouse;",
+        "uniform float uMouseIntensity;",
         "varying vec3 vNormal;",
         "varying vec3 vPosition;",
         "varying float vDisplacement;",
@@ -214,6 +216,10 @@
         "  float noise = snoise(pos * 5.0 + uTime * 0.25 + uNoiseOffset);",
         "  noise += 0.5 * snoise(pos * 10.0 + uTime * 0.4 + uNoiseOffset * 1.7);",
         "  float displacement = noise * 0.04;",
+        "  float mouseDist = length(pos - uMouse);",
+        "  float mouseEffect = smoothstep(1.2, 0.0, mouseDist) * uMouseIntensity;",
+        "  displacement += mouseEffect * 0.12;",
+        "  displacement += mouseEffect * snoise(pos * 8.0 + uTime * 0.6) * 0.06;",
         "  vDisplacement = displacement;",
         "  pos += normal * displacement;",
         "  vPosition = pos;",
@@ -284,7 +290,9 @@
           uniforms: {
             uTime: { value: 0.0 },
             uAlpha: { value: cfg.alpha },
-            uNoiseOffset: { value: cfg.noiseOffset }
+            uNoiseOffset: { value: cfg.noiseOffset },
+            uMouse: { value: new THREE.Vector3(0, 0, 0) },
+            uMouseIntensity: { value: 0.0 }
           },
           vertexShader: shellVertexShader,
           fragmentShader: shellFragmentShader,
@@ -312,6 +320,50 @@
       var glow = new THREE.Mesh(glowGeometry, glowMaterial);
       scene.add(glow);
 
+      // ── Mouse / touch interaction ──
+      var raycaster = new THREE.Raycaster();
+      var mouseNDC = new THREE.Vector2(0, 0);
+      var mouseTarget = new THREE.Vector3(0, 0, 0);
+      var mouseCurrent = new THREE.Vector3(0, 0, 0);
+      var mouseActive = false;
+      var hitSphere = new THREE.Mesh(
+        new THREE.SphereGeometry(1.3, 16, 16),
+        new THREE.MeshBasicMaterial({ visible: false })
+      );
+      scene.add(hitSphere);
+
+      function onPointerMove(x, y) {
+        mouseNDC.x = (x / window.innerWidth) * 2 - 1;
+        mouseNDC.y = -(y / window.innerHeight) * 2 + 1;
+        mouseActive = true;
+      }
+
+      window.addEventListener("mousemove", function (e) {
+        onPointerMove(e.clientX, e.clientY);
+      }, { passive: true });
+
+      window.addEventListener("touchmove", function (e) {
+        if (e.touches.length > 0) {
+          onPointerMove(e.touches[0].clientX, e.touches[0].clientY);
+        }
+      }, { passive: true });
+
+      window.addEventListener("touchstart", function (e) {
+        if (e.touches.length > 0) {
+          onPointerMove(e.touches[0].clientX, e.touches[0].clientY);
+        }
+      }, { passive: true });
+
+      window.addEventListener("mouseleave", function () {
+        mouseActive = false;
+      });
+
+      window.addEventListener("touchend", function () {
+        mouseActive = false;
+      }, { passive: true });
+
+      var currentIntensity = 0.0;
+
       // Handle resize
       window.addEventListener("resize", function () {
         camera.aspect = window.innerWidth / window.innerHeight;
@@ -326,8 +378,24 @@
         var elapsed = performance.now() * 0.001;
         glowMaterial.uniforms.uTime.value = elapsed;
 
+        // Raycast mouse onto invisible sphere to get 3D hit point
+        if (mouseActive) {
+          raycaster.setFromCamera(mouseNDC, camera);
+          var hits = raycaster.intersectObject(hitSphere);
+          if (hits.length > 0) {
+            mouseTarget.copy(hits[0].point);
+          }
+        }
+
+        // Smooth lerp toward target (or fade out when inactive)
+        var targetIntensity = mouseActive ? 1.0 : 0.0;
+        currentIntensity += (targetIntensity - currentIntensity) * 0.08;
+        mouseCurrent.lerp(mouseTarget, 0.1);
+
         for (var i = 0; i < shells.length; i++) {
           shellMaterials[i].uniforms.uTime.value = elapsed;
+          shellMaterials[i].uniforms.uMouse.value.copy(mouseCurrent);
+          shellMaterials[i].uniforms.uMouseIntensity.value = currentIntensity;
           shells[i].rotation.y += 0.0015 + i * 0.0005;
           shells[i].rotation.x += 0.001 + i * 0.0003;
         }
