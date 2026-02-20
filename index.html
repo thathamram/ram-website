@@ -6,7 +6,7 @@
   <title>Ram Thatham</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Tektur:wght@400;500;700&display=swap" rel="stylesheet" />
   <style>
     *,
     *::before,
@@ -31,18 +31,33 @@
 
     #globe-canvas {
       display: block;
+      cursor: grab;
+    }
+
+    #globe-canvas:active {
+      cursor: grabbing;
     }
 
     .name {
       position: fixed;
       top: 36px;
       left: 40px;
-      font-family: "Space Grotesk", sans-serif;
+      font-family: "Tektur", monospace;
       font-weight: 700;
       font-size: 28px;
-      letter-spacing: -0.02em;
+      letter-spacing: 0.04em;
       color: #fff;
       z-index: 10;
+    }
+
+    .cursor {
+      display: inline-block;
+      animation: blink 1s steps(1) infinite;
+    }
+
+    @keyframes blink {
+      0%, 50% { opacity: 1; }
+      50.01%, 100% { opacity: 0; }
     }
 
     .buttons {
@@ -84,7 +99,7 @@
   </style>
 </head>
 <body>
-  <div class="name">Ram Thatham</div>
+  <div class="name">Ram Thatham<span class="cursor">█</span></div>
   <canvas id="globe-canvas"></canvas>
 
   <div class="buttons">
@@ -108,6 +123,7 @@
     </a>
   </div>
 
+  <script src="https://cdn.jsdelivr.net/npm/topojson-client@3/dist/topojson-client.min.js"></script>
   <script>
     (function () {
       const canvas = document.getElementById("globe-canvas");
@@ -123,184 +139,7 @@
       window.addEventListener("resize", resize);
       resize();
 
-      // Simplified Earth continent outlines as [lat, lon] pairs
-      // Each sub-array is a separate landmass/coastline segment
-      const CONTINENTS = [
-        // North America
-        [
-          [60,-140],[58,-137],[55,-133],[54,-130],[52,-128],[49,-125],[46,-124],
-          [43,-124],[40,-124],[37,-122],[35,-120],[33,-117],[31,-115],[29,-113],
-          [27,-112],[25,-110],[23,-106],[21,-105],[19,-104],[17,-101],[16,-97],
-          [18,-95],[19,-91],[20,-87],[21,-86],[23,-84],[25,-81],[26,-80],
-          [27,-80],[28,-81],[29,-83],[30,-84],[30,-88],[29,-89],[29,-90],
-          [30,-90],[30,-89],[31,-88],[32,-87],[33,-85],[34,-82],[35,-78],
-          [36,-76],[37,-76],[38,-75],[39,-74],[40,-74],[41,-72],[42,-71],
-          [43,-70],[44,-68],[45,-67],[46,-67],[47,-68],[48,-69],[49,-67],
-          [47,-64],[46,-61],[44,-63],[44,-65],[43,-66],[42,-67],[44,-59],
-          [46,-56],[47,-53],[48,-53],[49,-55],[50,-56],[51,-56],[52,-56],
-          [53,-56],[53,-58],[52,-60],[51,-62],[50,-64],[49,-65],[48,-64],
-          [47,-65],[46,-63],[46,-61],[49,-68],[50,-66],[52,-66],[53,-60],
-          [55,-60],[57,-62],[58,-66],[60,-64],[62,-64],[64,-63],[65,-62],
-          [67,-61],[68,-63],[70,-68],[72,-72],[73,-78],[72,-83],[71,-85],
-          [69,-82],[68,-76],[66,-71],[65,-65],[68,-70],[70,-76],[71,-80],
-          [71,-86],[70,-92],[68,-97],[67,-100],[66,-108],[68,-112],[69,-117],
-          [70,-121],[71,-127],[71,-136],[70,-141],[69,-144],[67,-141],[65,-140],
-          [63,-141],[62,-140],[60,-140]
-        ],
-        // South America
-        [
-          [12,-72],[11,-74],[10,-76],[9,-78],[8,-77],[7,-76],[6,-75],[5,-76],
-          [4,-77],[2,-79],[0,-80],[-2,-80],[-4,-81],[-5,-81],[-6,-80],
-          [-7,-79],[-8,-79],[-10,-78],[-12,-77],[-14,-76],[-16,-75],[-18,-71],
-          [-20,-70],[-23,-70],[-25,-69],[-27,-69],[-29,-71],[-33,-72],
-          [-35,-72],[-38,-73],[-40,-73],[-42,-72],[-44,-72],[-46,-74],
-          [-48,-76],[-50,-75],[-52,-74],[-53,-72],[-54,-70],[-55,-68],
-          [-55,-66],[-54,-65],[-52,-68],[-50,-70],[-48,-66],[-46,-67],
-          [-44,-65],[-42,-63],[-40,-62],[-38,-57],[-36,-56],[-34,-54],
-          [-32,-52],[-30,-50],[-28,-48],[-25,-47],[-23,-44],[-22,-41],
-          [-20,-40],[-18,-39],[-16,-39],[-14,-39],[-12,-38],[-10,-37],
-          [-8,-35],[-6,-35],[-4,-34],[-2,-35],[0,-50],[2,-52],[4,-53],
-          [6,-57],[8,-60],[9,-62],[10,-65],[10,-67],[11,-70],[12,-72]
-        ],
-        // Europe
-        [
-          [36,-6],[37,-2],[38,0],[39,0],[40,1],[41,2],[43,3],[43,5],
-          [44,8],[44,9],[44,12],[42,12],[41,13],[40,15],[39,16],[38,16],
-          [37,15],[38,12],[39,9],[40,5],[40,2],[38,-1],[37,-6],[36,-6]
-        ],
-        // Europe main
-        [
-          [48,-5],[49,-2],[50,1],[51,2],[52,4],[53,5],[54,8],[55,8],
-          [55,10],[54,12],[55,13],[56,10],[57,10],[58,12],[59,11],
-          [60,11],[61,12],[62,16],[63,20],[64,24],[65,25],[66,24],
-          [68,20],[69,18],[70,20],[70,25],[69,28],[68,30],[67,33],
-          [66,34],[64,32],[62,30],[60,28],[58,28],[56,28],[55,26],
-          [54,22],[52,21],[51,17],[50,14],[49,13],[48,16],[47,15],
-          [46,13],[46,10],[45,8],[44,8],[43,5],[43,3],[45,1],
-          [47,-1],[48,-5]
-        ],
-        // Africa
-        [
-          [37,-1],[36,0],[35,0],[35,-1],[34,-2],[33,-5],[32,-9],
-          [31,-10],[30,-10],[28,-13],[26,-14],[24,-16],[22,-17],
-          [20,-17],[18,-16],[16,-17],[14,-17],[13,-16],[11,-15],
-          [9,-13],[7,-11],[5,-9],[5,-4],[5,-1],[5,1],[6,1],[7,2],
-          [5,10],[4,9],[3,10],[2,10],[1,9],[0,9],[-1,12],[-2,13],
-          [-4,12],[-6,12],[-8,14],[-10,14],[-10,17],[-8,21],[-6,22],
-          [-4,23],[-3,26],[-1,30],[0,32],[1,32],[2,30],[4,30],[5,32],
-          [7,34],[9,38],[10,41],[11,43],[12,44],[12,46],[11,47],
-          [10,48],[8,48],[5,46],[3,44],[1,42],[-1,41],[-4,40],
-          [-8,39],[-10,40],[-12,41],[-15,40],[-17,37],[-19,36],
-          [-21,35],[-24,35],[-26,33],[-28,32],[-30,31],[-32,29],
-          [-33,28],[-34,26],[-34,23],[-34,18],[-33,18],[-31,17],
-          [-29,16],[-28,15],[-25,15],[-23,14],[-20,12],[-18,12],
-          [-15,12],[-12,14],[-10,14],[-8,13],[-6,12],[-4,12],
-          [-2,6],[-1,5],[2,2],[4,-1],[5,-4],[5,-8],[7,-11],[9,-13],
-          [11,-15],[13,-16],[14,-17],[16,-17],[18,-16],[20,-17],
-          [22,-17],[24,-16],[26,-14],[28,-13],[30,-10],[31,-10],
-          [33,-7],[35,-2],[36,0],[37,-1]
-        ],
-        // Asia (simplified)
-        [
-          [42,28],[40,30],[38,35],[37,36],[36,36],[35,36],[33,35],
-          [31,34],[29,35],[27,34],[25,33],[23,36],[20,39],[18,42],
-          [16,45],[15,50],[14,52],[13,55],[11,58],[10,61],[8,65],
-          [6,68],[5,73],[6,80],[7,80],[8,77],[10,76],[12,80],
-          [15,80],[18,80],[20,78],[22,79],[22,88],[23,89],[25,89],
-          [26,92],[28,97],[27,99],[26,100],[22,100],[20,100],[18,103],
-          [16,106],[14,108],[12,109],[10,109],[8,108],[6,106],
-          [4,105],[2,104],[1,104],[0,105],[-2,106],[-5,106],
-          [-7,106],[-8,110],[-7,112],[-6,114],[-5,116],[-4,116],
-          [-3,114],[-2,113],[-1,110],[1,108],[3,108],[5,109],
-          [7,110],[8,111],[10,112],[12,109],[14,109],[16,108],
-          [18,107],[20,106],[21,108],[22,108],[23,107],[25,104],
-          [27,102],[28,100],[30,100],[32,104],[34,107],[36,109],
-          [38,110],[39,117],[40,117],[41,118],[43,118],[45,120],
-          [46,123],[47,128],[48,130],[49,132],[50,132],[51,134],
-          [52,140],[53,141],[54,142],[55,138],[56,136],[58,136],
-          [60,138],[61,140],[62,150],[63,161],[64,170],[65,170],
-          [67,180],[68,180],[69,175],[70,170],[71,160],[70,150],
-          [69,145],[68,140],[67,140],[66,136],[65,130],[64,128],
-          [63,130],[62,135],[61,138],[60,140],[58,140],[56,138],
-          [55,137],[54,140],[55,142],[56,145],[56,150],[55,155],
-          [54,155],[53,152],[52,150],[51,143],[50,135],[49,133],
-          [48,131],[47,130],[46,125],[45,122],[43,120],[42,117],
-          [40,116],[38,108],[36,106],[34,104],[32,102],[30,97],
-          [28,95],[26,90],[25,87],[24,85],[22,84],[20,81],[18,78],
-          [16,78],[14,76],[12,73],[10,68],[8,63],[6,57],[5,50],
-          [8,45],[12,44],[15,42],[18,40],[20,36],[24,32],[28,30],
-          [30,28],[32,28],[35,28],[37,28],[38,26],[40,28],[42,28]
-        ],
-        // Australia
-        [
-          [-12,136],[-13,132],[-14,129],[-16,128],[-18,126],[-20,119],
-          [-22,116],[-24,114],[-26,113],[-28,114],[-30,115],[-32,115],
-          [-34,116],[-35,117],[-35,118],[-35,121],[-35,124],[-35,128],
-          [-36,132],[-37,136],[-38,140],[-38,144],[-38,146],[-38,148],
-          [-37,150],[-35,151],[-34,151],[-33,152],[-31,153],[-29,153],
-          [-27,153],[-25,152],[-23,150],[-21,149],[-19,147],[-17,146],
-          [-16,145],[-15,145],[-14,144],[-13,142],[-12,141],[-12,136]
-        ],
-        // Greenland
-        [
-          [77,-72],[78,-68],[79,-60],[80,-52],[81,-45],[82,-40],[82,-35],
-          [81,-28],[80,-22],[79,-18],[78,-18],[77,-20],[76,-22],[75,-20],
-          [73,-22],[72,-24],[71,-27],[70,-30],[69,-34],[68,-40],[67,-45],
-          [66,-48],[65,-50],[64,-52],[63,-52],[62,-50],[61,-48],[60,-44],
-          [60,-48],[61,-50],[63,-54],[65,-54],[67,-52],[69,-50],[70,-48],
-          [72,-46],[73,-44],[74,-44],[75,-46],[76,-50],[76,-55],[75,-60],
-          [74,-64],[73,-66],[74,-70],[75,-72],[77,-72]
-        ],
-        // British Isles
-        [
-          [50,-5],[51,-3],[52,-1],[53,0],[54,-1],[55,-2],[56,-3],
-          [57,-5],[58,-5],[58,-3],[57,-2],[56,-2],[55,0],[54,0],
-          [53,1],[52,2],[51,1],[50,0],[50,-5]
-        ],
-        // Japan
-        [
-          [31,131],[33,130],[34,132],[35,133],[35,135],[36,136],
-          [37,137],[38,138],[39,140],[40,140],[41,141],[42,141],
-          [43,142],[44,144],[45,142],[44,140],[43,140],[42,139],
-          [41,140],[40,139],[38,137],[37,136],[35,134],[34,131],
-          [33,129],[31,131]
-        ],
-        // Indonesia / Malaysia simplified
-        [
-          [6,106],[5,105],[3,104],[1,104],[0,105],[-2,106],
-          [-4,106],[-5,107],[-6,106],[-7,106],[-8,110],[-7,113],
-          [-6,115],[-5,116],[-3,114],[-2,112],[-1,110],[0,109],
-          [1,106],[3,106],[5,106],[6,106]
-        ],
-        // New Zealand
-        [
-          [-35,174],[-36,175],[-37,176],[-38,176],[-39,177],
-          [-40,176],[-41,175],[-42,174],[-43,172],[-44,170],
-          [-45,168],[-46,167],[-46,166],[-45,167],[-44,168],
-          [-43,170],[-42,172],[-41,173],[-40,174],[-39,175],
-          [-38,175],[-37,175],[-36,174],[-35,174]
-        ],
-        // Iceland
-        [
-          [64,-22],[65,-20],[66,-18],[66,-16],[65,-14],[64,-14],
-          [63,-16],[63,-18],[63,-20],[64,-22]
-        ],
-        // Madagascar
-        [
-          [-12,49],[-14,48],[-16,47],[-18,44],[-20,44],[-22,44],
-          [-24,45],[-25,47],[-24,49],[-22,50],[-20,50],[-18,50],
-          [-16,50],[-14,50],[-12,49]
-        ],
-        // Sri Lanka
-        [
-          [10,80],[9,80],[8,80],[7,80],[6,81],[7,82],[8,82],[9,81],[10,80]
-        ]
-      ];
-
-      // Convert lat/lon continent outlines to densely sampled sphere points
-      const dots = [];
-      const DOT_SPACING = 2; // degrees between sampled points along each coastline
-
+      // Convert lat/lon to unit sphere xyz
       function latLonToXYZ(lat, lon) {
         const phi = (90 - lat) * (Math.PI / 180);
         const theta = (lon + 180) * (Math.PI / 180);
@@ -311,75 +150,170 @@
         };
       }
 
-      for (const segment of CONTINENTS) {
-        for (let i = 0; i < segment.length - 1; i++) {
-          const [lat1, lon1] = segment[i];
-          const [lat2, lon2] = segment[i + 1];
+      // Sample points along polygon rings at a fixed spacing
+      function sampleRing(ring, spacing) {
+        const pts = [];
+        for (let i = 0; i < ring.length - 1; i++) {
+          const [lon1, lat1] = ring[i];
+          const [lon2, lat2] = ring[i + 1];
           const dist = Math.sqrt((lat2 - lat1) ** 2 + (lon2 - lon1) ** 2);
-          const steps = Math.max(1, Math.round(dist / DOT_SPACING));
+          const steps = Math.max(1, Math.round(dist / spacing));
           for (let s = 0; s < steps; s++) {
             const t = s / steps;
-            const lat = lat1 + (lat2 - lat1) * t;
-            const lon = lon1 + (lon2 - lon1) * t;
-            dots.push(latLonToXYZ(lat, lon));
+            pts.push(latLonToXYZ(
+              lat1 + (lat2 - lat1) * t,
+              lon1 + (lon2 - lon1) * t
+            ));
           }
         }
-        // Add last point of each segment
-        const last = segment[segment.length - 1];
-        dots.push(latLonToXYZ(last[0], last[1]));
+        if (ring.length > 0) {
+          const last = ring[ring.length - 1];
+          pts.push(latLonToXYZ(last[1], last[0]));
+        }
+        return pts;
       }
 
-      const DOT_COUNT = dots.length;
+      let dots = [];
       const ROTATION_SPEED = 0.0008;
-      const DOT_SIZE = 1.8;
+      const DOT_SIZE = 1.5;
+      const DOT_SPACING = 2;
 
       let angle = 0;
+
+      // Mouse drag interaction
+      let isDragging = false;
+      let dragStartX = 0;
+      let dragAngleStart = 0;
+      let dragVelocity = 0;
+      let lastDragX = 0;
+      let lastDragTime = 0;
+
+      canvas.addEventListener("pointerdown", function (e) {
+        isDragging = true;
+        dragStartX = e.clientX;
+        dragAngleStart = angle;
+        dragVelocity = 0;
+        lastDragX = e.clientX;
+        lastDragTime = performance.now();
+        canvas.setPointerCapture(e.pointerId);
+      });
+
+      canvas.addEventListener("pointermove", function (e) {
+        if (!isDragging) return;
+        const dx = e.clientX - dragStartX;
+        angle = dragAngleStart + dx * 0.005;
+        const now = performance.now();
+        const dt = now - lastDragTime;
+        if (dt > 0) {
+          // Normalize velocity relative to ~60fps frame time (16ms)
+          dragVelocity = (e.clientX - lastDragX) * 0.005 / (dt / 16);
+        }
+        lastDragX = e.clientX;
+        lastDragTime = now;
+      });
+
+      canvas.addEventListener("pointerup", function () {
+        isDragging = false;
+      });
+
+      canvas.addEventListener("pointercancel", function () {
+        isDragging = false;
+      });
+
+      // Load real Natural Earth 110m coastline data
+      fetch("https://cdn.jsdelivr.net/npm/world-atlas@2/land-110m.json")
+        .then(function (res) { return res.json(); })
+        .then(function (topology) {
+          if (!topology.objects || !topology.objects.land) {
+            throw new Error("Unexpected TopoJSON structure");
+          }
+          var land = topojson.feature(topology, topology.objects.land);
+          var features = land.type === "FeatureCollection" ? land.features : [land];
+
+          features.forEach(function (feature) {
+            var geom = feature.geometry || feature;
+            if (geom.type === "Polygon") {
+              geom.coordinates.forEach(function (ring) {
+                dots = dots.concat(sampleRing(ring, DOT_SPACING));
+              });
+            } else if (geom.type === "MultiPolygon") {
+              geom.coordinates.forEach(function (polygon) {
+                polygon.forEach(function (ring) {
+                  dots = dots.concat(sampleRing(ring, DOT_SPACING));
+                });
+              });
+            }
+          });
+
+          draw();
+        })
+        .catch(function () {
+          // Fallback: show a simple wireframe sphere if data fails to load
+          for (var i = 0; i < 800; i++) {
+            var theta = Math.acos(1 - (2 * (i + 0.5)) / 800);
+            var phi = Math.PI * (1 + Math.sqrt(5)) * i;
+            dots.push({
+              x: Math.sin(theta) * Math.cos(phi),
+              y: Math.sin(theta) * Math.sin(phi),
+              z: Math.cos(theta),
+            });
+          }
+          draw();
+        });
 
       function draw() {
         ctx.clearRect(0, 0, width, height);
 
-        const r = Math.min(width, height) * 0.3;
-        const cx = width / 2;
-        const cy = height / 2;
+        var r = Math.min(width, height) * 0.3;
+        var cx = width / 2;
+        var cy = height / 2;
 
-        const cosA = Math.cos(angle);
-        const sinA = Math.sin(angle);
+        // Apply drag momentum with friction decay
+        if (!isDragging) {
+          dragVelocity *= 0.95;
+          angle += ROTATION_SPEED + dragVelocity;
+          if (Math.abs(dragVelocity) < 0.0001) dragVelocity = 0;
+        }
+
+        var cosA = Math.cos(angle);
+        var sinA = Math.sin(angle);
 
         // Slight tilt on x-axis for a more natural globe look
-        const tilt = 0.4;
-        const cosT = Math.cos(tilt);
-        const sinT = Math.sin(tilt);
+        var tilt = 0.4;
+        var cosT = Math.cos(tilt);
+        var sinT = Math.sin(tilt);
 
-        for (let i = 0; i < DOT_COUNT; i++) {
-          const { x, y, z } = dots[i];
+        var dotCount = dots.length;
+        for (var i = 0; i < dotCount; i++) {
+          var d = dots[i];
 
           // Rotate around Y axis
-          const rx = x * cosA - z * sinA;
-          const rz = x * sinA + z * cosA;
+          var rx = d.x * cosA - d.z * sinA;
+          var rz = d.x * sinA + d.z * cosA;
 
           // Tilt around X axis
-          const ry = y * cosT - rz * sinT;
-          const rz2 = y * sinT + rz * cosT;
+          var ry = d.y * cosT - rz * sinT;
+          var rz2 = d.y * sinT + rz * cosT;
+
+          // Only draw front-facing dots
+          if (rz2 < -0.15) continue;
 
           // Simple perspective projection
-          const scale = 1 / (1 - rz2 * 0.3);
-          const px = cx + rx * r * scale;
-          const py = cy + ry * r * scale;
+          var scale = 1 / (1 - rz2 * 0.3);
+          var px = cx + rx * r * scale;
+          var py = cy + ry * r * scale;
 
-          // Opacity based on depth — dots in the back are dimmer
-          const alpha = 0.15 + 0.85 * ((rz2 + 1) / 2);
+          // Opacity based on depth
+          var alpha = 0.1 + 0.9 * ((rz2 + 1) / 2);
 
           ctx.beginPath();
           ctx.arc(px, py, DOT_SIZE * scale, 0, Math.PI * 2);
-          ctx.fillStyle = `rgba(255, 255, 255, ${alpha.toFixed(2)})`;
+          ctx.fillStyle = "rgba(255,255,255," + alpha.toFixed(2) + ")";
           ctx.fill();
         }
 
-        angle += ROTATION_SPEED;
         requestAnimationFrame(draw);
       }
-
-      draw();
     })();
   </script>
 </body>
