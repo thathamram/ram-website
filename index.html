@@ -227,7 +227,7 @@
         "}"
       ].join("\n");
 
-      // ── Shell fragment shader (semi-transparent + fresnel) ──
+      // ── Shell fragment shader (wispy aurora — transparent core, edge-only) ──
       var shellFragmentShader = [
         "uniform float uTime;",
         "uniform float uAlpha;",
@@ -236,15 +236,15 @@
         "varying float vDisplacement;",
         "",
         "void main() {",
-        "  float fresnel = pow(1.0 - abs(dot(vNormal, vec3(0.0, 0.0, 1.0))), 2.5);",
-        "  vec3 color1 = vec3(0.2, 0.4, 1.0);",
-        "  vec3 color2 = vec3(0.6, 0.2, 0.9);",
-        "  vec3 color3 = vec3(0.1, 0.8, 0.9);",
+        "  float fresnel = pow(1.0 - abs(dot(vNormal, vec3(0.0, 0.0, 1.0))), 3.5);",
+        "  vec3 color1 = vec3(0.12, 0.25, 0.7);",
+        "  vec3 color2 = vec3(0.35, 0.12, 0.55);",
+        "  vec3 color3 = vec3(0.08, 0.45, 0.55);",
         "  float t = sin(uTime * 0.2) * 0.5 + 0.5;",
         "  vec3 baseColor = mix(color1, color2, t + vDisplacement);",
-        "  baseColor = mix(baseColor, color3, fresnel * 0.6);",
-        "  vec3 finalColor = baseColor * (0.4 + fresnel * 1.8);",
-        "  float alpha = (fresnel * 0.6 + 0.15) * uAlpha;",
+        "  baseColor = mix(baseColor, color3, fresnel * 0.5);",
+        "  vec3 finalColor = baseColor * (0.15 + fresnel * 0.85);",
+        "  float alpha = fresnel * fresnel * uAlpha;",
         "  gl_FragColor = vec4(finalColor, alpha);",
         "}"
       ].join("\n");
@@ -265,20 +265,20 @@
         "",
         "void main() {",
         "  float intensity = pow(0.55 - dot(vNormal, vec3(0.0, 0.0, 1.0)), 3.0);",
-        "  vec3 color1 = vec3(0.2, 0.4, 1.0);",
-        "  vec3 color2 = vec3(0.6, 0.2, 0.9);",
+        "  vec3 color1 = vec3(0.1, 0.2, 0.5);",
+        "  vec3 color2 = vec3(0.25, 0.1, 0.4);",
         "  float t = sin(uTime * 0.2) * 0.5 + 0.5;",
         "  vec3 glowColor = mix(color1, color2, t);",
-        "  gl_FragColor = vec4(glowColor * intensity, intensity * 0.6);",
+        "  gl_FragColor = vec4(glowColor * intensity, intensity * 0.25);",
         "}"
       ].join("\n");
 
       // ── Create layered transparent shells ──
       var shellConfigs = [
-        { radius: 0.90, segments: 64, alpha: 0.35, noiseOffset: 0.0 },
-        { radius: 0.97, segments: 64, alpha: 0.30, noiseOffset: 3.3 },
-        { radius: 1.04, segments: 64, alpha: 0.25, noiseOffset: 6.6 },
-        { radius: 1.12, segments: 64, alpha: 0.20, noiseOffset: 10.0 }
+        { radius: 0.90, segments: 64, alpha: 0.12, noiseOffset: 0.0 },
+        { radius: 0.97, segments: 64, alpha: 0.10, noiseOffset: 3.3 },
+        { radius: 1.04, segments: 64, alpha: 0.08, noiseOffset: 6.6 },
+        { radius: 1.12, segments: 64, alpha: 0.06, noiseOffset: 10.0 }
       ];
 
       var shells = [];
