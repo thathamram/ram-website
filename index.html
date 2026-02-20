@@ -150,18 +150,25 @@
       );
       camera.position.z = 3.6;
 
-      var renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+      // ── Mobile detection & performance tuning ──
+      var isMobile = /Android|iPhone|iPad|iPod|webOS|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || window.innerWidth < 768;
+      var maxDPR = isMobile ? 1.5 : window.devicePixelRatio;
+
+      var renderer = new THREE.WebGLRenderer({ antialias: !isMobile, alpha: true });
       renderer.setSize(window.innerWidth, window.innerHeight);
-      renderer.setPixelRatio(window.devicePixelRatio);
+      renderer.setPixelRatio(Math.min(maxDPR, window.devicePixelRatio));
       container.appendChild(renderer.domElement);
 
-      // ── Overlay scene (color-dodge layer) ──
-      var overlayScene = new THREE.Scene();
-      var overlayRenderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-      overlayRenderer.setSize(window.innerWidth, window.innerHeight);
-      overlayRenderer.setPixelRatio(window.devicePixelRatio);
-      overlayRenderer.setClearColor(0x000000, 0);
-      overlay.appendChild(overlayRenderer.domElement);
+      // ── Overlay scene (color-dodge layer) — skip on mobile ──
+      var overlayScene = isMobile ? null : new THREE.Scene();
+      var overlayRenderer = null;
+      if (!isMobile) {
+        overlayRenderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+        overlayRenderer.setSize(window.innerWidth, window.innerHeight);
+        overlayRenderer.setPixelRatio(Math.min(maxDPR, window.devicePixelRatio));
+        overlayRenderer.setClearColor(0x000000, 0);
+        overlay.appendChild(overlayRenderer.domElement);
+      }
 
       // ── Simplex noise + FBM GLSL ──
       var noiseGLSL = [
@@ -213,13 +220,13 @@
         "  return 42.0 * dot(m*m, vec4(dot(p0,x0),dot(p1,x1),dot(p2,x2),dot(p3,x3)));",
         "}",
         "",
-        "// 5-octave FBM",
+        "// FBM",
         "float fbm(vec3 p, float seed) {",
         "  float val = 0.0;",
         "  float amp = 0.45;",
         "  float freq = 2.0;",
         "  p += seed;",
-        "  for (int i = 0; i < 5; i++) {",
+        "  for (int i = 0; i < " + (isMobile ? "3" : "5") + "; i++) {",
         "    val += snoise(p * freq) * amp;",
         "    freq *= 2.1;",
         "    amp *= 0.45;",
@@ -408,7 +415,11 @@
       ].join("\n");
 
       // ── Create wireframe orb shells ──
-      var shellConfigs = [
+      var shellConfigs = isMobile ? [
+        { radius: 0.85, segments: 48, opacity: 0.9, noiseOffset: 0.0, noiseScale: 0.22 },
+        { radius: 0.97, segments: 40, opacity: 0.65, noiseOffset: 3.3, noiseScale: 0.20 },
+        { radius: 1.10, segments: 36, opacity: 0.4, noiseOffset: 6.6, noiseScale: 0.25 }
+      ] : [
         { radius: 0.85, segments: 96, opacity: 0.85, noiseOffset: 0.0, noiseScale: 0.22 },
         { radius: 0.95, segments: 80, opacity: 0.65, noiseOffset: 3.3, noiseScale: 0.18 },
         { radius: 1.06, segments: 72, opacity: 0.5, noiseOffset: 6.6, noiseScale: 0.25 },
@@ -447,38 +458,40 @@
         shellMaterials.push(mat);
       });
 
-      // ── Overlay wireframe shells (color-dodge brightening) ──
+      // ── Overlay wireframe shells (color-dodge brightening) — desktop only ──
       var overlayShells = [];
       var overlayMaterials = [];
 
-      shellConfigs.forEach(function (cfg) {
-        var geo = new THREE.SphereGeometry(cfg.radius, cfg.segments, cfg.segments);
-        var mat = new THREE.ShaderMaterial({
-          uniforms: {
-            uTime: { value: 0.0 },
-            uOpacity: { value: cfg.opacity * 0.6 },
-            uNoiseOffset: { value: cfg.noiseOffset },
-            uNoiseScale: { value: cfg.noiseScale },
-            uMouse: { value: new THREE.Vector3(0, 0, 0) },
-            uMouseIntensity: { value: 0.0 },
-            uColorA: { value: colorA },
-            uColorB: { value: colorB }
-          },
-          vertexShader: orbVertexShader,
-          fragmentShader: overlayFragmentShader,
-          wireframe: true,
-          blending: THREE.AdditiveBlending,
-          transparent: true,
-          depthWrite: false,
+      if (!isMobile) {
+        shellConfigs.forEach(function (cfg) {
+          var geo = new THREE.SphereGeometry(cfg.radius, cfg.segments, cfg.segments);
+          var mat = new THREE.ShaderMaterial({
+            uniforms: {
+              uTime: { value: 0.0 },
+              uOpacity: { value: cfg.opacity * 0.6 },
+              uNoiseOffset: { value: cfg.noiseOffset },
+              uNoiseScale: { value: cfg.noiseScale },
+              uMouse: { value: new THREE.Vector3(0, 0, 0) },
+              uMouseIntensity: { value: 0.0 },
+              uColorA: { value: colorA },
+              uColorB: { value: colorB }
+            },
+            vertexShader: orbVertexShader,
+            fragmentShader: overlayFragmentShader,
+            wireframe: true,
+            blending: THREE.AdditiveBlending,
+            transparent: true,
+            depthWrite: false,
+          });
+          var mesh = new THREE.Mesh(geo, mat);
+          overlayScene.add(mesh);
+          overlayShells.push(mesh);
+          overlayMaterials.push(mat);
         });
-        var mesh = new THREE.Mesh(geo, mat);
-        overlayScene.add(mesh);
-        overlayShells.push(mesh);
-        overlayMaterials.push(mat);
-      });
+      }
 
       // ── Glow mesh (outer halo) ──
-      var glowGeometry = new THREE.SphereGeometry(1.6, 64, 64);
+      var glowGeometry = new THREE.SphereGeometry(1.6, isMobile ? 32 : 64, isMobile ? 32 : 64);
       var glowMaterial = new THREE.ShaderMaterial({
         uniforms: { uTime: { value: 0.0 } },
         vertexShader: glowVertexShader,
@@ -576,7 +589,7 @@
         camera.aspect = window.innerWidth / window.innerHeight;
         camera.updateProjectionMatrix();
         renderer.setSize(window.innerWidth, window.innerHeight);
-        overlayRenderer.setSize(window.innerWidth, window.innerHeight);
+        if (overlayRenderer) overlayRenderer.setSize(window.innerWidth, window.innerHeight);
       });
 
       // Animation loop
@@ -620,14 +633,16 @@
           shells[i].rotation.y = autoY + dragRotation.y;
           shells[i].rotation.x = autoX + dragRotation.x;
 
-          overlayMaterials[i].uniforms.uTime.value = elapsed;
-          overlayMaterials[i].uniforms.uMouse.value.copy(mouseCurrent);
-          overlayMaterials[i].uniforms.uMouseIntensity.value = currentIntensity;
-          overlayShells[i].rotation.copy(shells[i].rotation);
+          if (overlayMaterials[i]) {
+            overlayMaterials[i].uniforms.uTime.value = elapsed;
+            overlayMaterials[i].uniforms.uMouse.value.copy(mouseCurrent);
+            overlayMaterials[i].uniforms.uMouseIntensity.value = currentIntensity;
+            overlayShells[i].rotation.copy(shells[i].rotation);
+          }
         }
 
         renderer.render(scene, camera);
-        overlayRenderer.render(overlayScene, camera);
+        if (overlayRenderer) overlayRenderer.render(overlayScene, camera);
       }
 
       animate();
