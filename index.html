@@ -29,13 +29,13 @@
       overflow: hidden;
     }
 
-    #globe-canvas {
-      display: block;
-      cursor: grab;
-    }
-
-    #globe-canvas:active {
-      cursor: grabbing;
+    #globe-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 0;
     }
 
     .name {
@@ -99,8 +99,8 @@
   </style>
 </head>
 <body>
+  <div id="globe-container"></div>
   <div class="name">Ram Thatham<span class="cursor">█</span></div>
-  <canvas id="globe-canvas"></canvas>
 
   <div class="buttons">
     <a href="https://linkedin.com" target="_blank" rel="noopener noreferrer" aria-label="LinkedIn">
@@ -123,205 +123,115 @@
     </a>
   </div>
 
-  <script src="https://cdn.jsdelivr.net/npm/topojson-client@3/dist/topojson-client.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
   <script>
     (function () {
-      const canvas = document.getElementById("globe-canvas");
-      const ctx = canvas.getContext("2d");
+      var container = document.getElementById("globe-container");
 
-      let width, height;
+      // Scene
+      var scene = new THREE.Scene();
+      scene.background = new THREE.Color(0x000000);
 
-      function resize() {
-        width = canvas.width = window.innerWidth;
-        height = canvas.height = window.innerHeight;
-      }
+      // Camera
+      var camera = new THREE.PerspectiveCamera(
+        45,
+        window.innerWidth / window.innerHeight,
+        0.1,
+        1000
+      );
+      camera.position.z = 3;
 
-      window.addEventListener("resize", resize);
-      resize();
+      // Renderer
+      var renderer = new THREE.WebGLRenderer({ antialias: true });
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      renderer.setPixelRatio(window.devicePixelRatio);
+      container.appendChild(renderer.domElement);
 
-      // Convert lat/lon to unit sphere xyz
-      function latLonToXYZ(lat, lon) {
-        const phi = (90 - lat) * (Math.PI / 180);
-        const theta = (lon + 180) * (Math.PI / 180);
-        return {
-          x: -(Math.sin(phi) * Math.cos(theta)),
-          y: Math.cos(phi),
-          z: Math.sin(phi) * Math.sin(theta),
-        };
-      }
+      // OrbitControls — rotation only, no zoom
+      var controls = new THREE.OrbitControls(camera, renderer.domElement);
+      controls.enableZoom = false;
+      controls.enablePan = false;
+      controls.enableDamping = true;
+      controls.dampingFactor = 0.05;
+      controls.rotateSpeed = 0.5;
 
-      // Sample points along polygon rings at a fixed spacing
-      function sampleRing(ring, spacing) {
-        const pts = [];
-        for (let i = 0; i < ring.length - 1; i++) {
-          const [lon1, lat1] = ring[i];
-          const [lon2, lat2] = ring[i + 1];
-          // Skip Antarctica region
-          if (lat1 < -60 && lat2 < -60) continue;
-          const dist = Math.sqrt((lat2 - lat1) ** 2 + (lon2 - lon1) ** 2);
-          const steps = Math.max(1, Math.round(dist / spacing));
-          for (let s = 0; s < steps; s++) {
-            const t = s / steps;
-            const lat = lat1 + (lat2 - lat1) * t;
-            if (lat < -60) continue;
-            // Randomly thin dots for a scattered particle feel
-            if (Math.random() > 0.4) continue;
-            pts.push(latLonToXYZ(
-              lat,
-              lon1 + (lon2 - lon1) * t
-            ));
-          }
-        }
-        if (ring.length > 0) {
-          const last = ring[ring.length - 1];
-          if (last[1] >= -60 && Math.random() < 0.4) {
-            pts.push(latLonToXYZ(last[1], last[0]));
-          }
-        }
-        return pts;
-      }
+      // Earth globe
+      var globeGeometry = new THREE.SphereGeometry(1, 64, 64);
 
-      let dots = [];
-      const ROTATION_SPEED = 0.0008;
-      const DOT_SIZE = 1.6;
-      const DOT_SPACING = 3;
+      // Load grayscale Earth texture
+      var textureLoader = new THREE.TextureLoader();
+      textureLoader.setCrossOrigin("anonymous");
 
-      let angle = 0;
+      var earthTexture = textureLoader.load(
+        "https://unpkg.com/three-globe/example/img/earth-dark.jpg"
+      );
 
-      // Mouse drag interaction
-      let isDragging = false;
-      let dragStartX = 0;
-      let dragAngleStart = 0;
-      let dragVelocity = 0;
-      let lastDragX = 0;
-      let lastDragTime = 0;
-
-      canvas.addEventListener("pointerdown", function (e) {
-        isDragging = true;
-        dragStartX = e.clientX;
-        dragAngleStart = angle;
-        dragVelocity = 0;
-        lastDragX = e.clientX;
-        lastDragTime = performance.now();
-        canvas.setPointerCapture(e.pointerId);
+      var globeMaterial = new THREE.MeshPhongMaterial({
+        map: earthTexture,
       });
 
-      canvas.addEventListener("pointermove", function (e) {
-        if (!isDragging) return;
-        const dx = e.clientX - dragStartX;
-        angle = dragAngleStart + dx * 0.005;
-        const now = performance.now();
-        const dt = now - lastDragTime;
-        if (dt > 0) {
-          // Normalize velocity relative to ~60fps frame time (16ms)
-          dragVelocity = (e.clientX - lastDragX) * 0.005 / (dt / 16);
-        }
-        lastDragX = e.clientX;
-        lastDragTime = now;
+      var globe = new THREE.Mesh(globeGeometry, globeMaterial);
+      scene.add(globe);
+
+      // Atmosphere glow effect — slightly larger transparent sphere
+      var atmosphereVertexShader = [
+        "varying vec3 vNormal;",
+        "void main() {",
+        "  vNormal = normalize(normalMatrix * normal);",
+        "  gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);",
+        "}"
+      ].join("\n");
+
+      var atmosphereFragmentShader = [
+        "varying vec3 vNormal;",
+        "void main() {",
+        "  float intensity = pow(0.65 - dot(vNormal, vec3(0.0, 0.0, 1.0)), 2.0);",
+        "  gl_FragColor = vec4(0.5, 0.7, 1.0, 1.0) * intensity;",
+        "}"
+      ].join("\n");
+
+      var atmosphereMaterial = new THREE.ShaderMaterial({
+        vertexShader: atmosphereVertexShader,
+        fragmentShader: atmosphereFragmentShader,
+        blending: THREE.AdditiveBlending,
+        side: THREE.BackSide,
+        transparent: true,
       });
 
-      canvas.addEventListener("pointerup", function () {
-        isDragging = false;
+      var atmosphere = new THREE.Mesh(
+        new THREE.SphereGeometry(1.15, 64, 64),
+        atmosphereMaterial
+      );
+      scene.add(atmosphere);
+
+      // Lighting
+      var ambientLight = new THREE.AmbientLight(0x333333);
+      scene.add(ambientLight);
+
+      var directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+      directionalLight.position.set(5, 3, 5);
+      scene.add(directionalLight);
+
+      // Handle resize
+      window.addEventListener("resize", function () {
+        camera.aspect = window.innerWidth / window.innerHeight;
+        camera.updateProjectionMatrix();
+        renderer.setSize(window.innerWidth, window.innerHeight);
       });
 
-      canvas.addEventListener("pointercancel", function () {
-        isDragging = false;
-      });
+      // Animation loop
+      function animate() {
+        requestAnimationFrame(animate);
 
-      // Load real Natural Earth 110m coastline data
-      fetch("https://cdn.jsdelivr.net/npm/world-atlas@2/land-110m.json")
-        .then(function (res) { return res.json(); })
-        .then(function (topology) {
-          if (!topology.objects || !topology.objects.land) {
-            throw new Error("Unexpected TopoJSON structure");
-          }
-          var land = topojson.feature(topology, topology.objects.land);
-          var features = land.type === "FeatureCollection" ? land.features : [land];
+        // Slow auto-rotation
+        globe.rotation.y += 0.001;
 
-          features.forEach(function (feature) {
-            var geom = feature.geometry || feature;
-            if (geom.type === "Polygon") {
-              geom.coordinates.forEach(function (ring) {
-                dots = dots.concat(sampleRing(ring, DOT_SPACING));
-              });
-            } else if (geom.type === "MultiPolygon") {
-              geom.coordinates.forEach(function (polygon) {
-                polygon.forEach(function (ring) {
-                  dots = dots.concat(sampleRing(ring, DOT_SPACING));
-                });
-              });
-            }
-          });
-
-          draw();
-        })
-        .catch(function () {
-          // Fallback: show a simple wireframe sphere if data fails to load
-          for (var i = 0; i < 800; i++) {
-            var theta = Math.acos(1 - (2 * (i + 0.5)) / 800);
-            var phi = Math.PI * (1 + Math.sqrt(5)) * i;
-            dots.push({
-              x: Math.sin(theta) * Math.cos(phi),
-              y: Math.sin(theta) * Math.sin(phi),
-              z: Math.cos(theta),
-            });
-          }
-          draw();
-        });
-
-      function draw() {
-        ctx.clearRect(0, 0, width, height);
-
-        var r = Math.min(width, height) * 0.3;
-        var cx = width / 2;
-        var cy = height / 2;
-
-        // Apply drag momentum with friction decay
-        if (!isDragging) {
-          dragVelocity *= 0.95;
-          angle += ROTATION_SPEED + dragVelocity;
-          if (Math.abs(dragVelocity) < 0.0001) dragVelocity = 0;
-        }
-
-        var cosA = Math.cos(angle);
-        var sinA = Math.sin(angle);
-
-        // Slight tilt on x-axis for a more natural globe look
-        var tilt = 0.4;
-        var cosT = Math.cos(tilt);
-        var sinT = Math.sin(tilt);
-
-        var dotCount = dots.length;
-        for (var i = 0; i < dotCount; i++) {
-          var d = dots[i];
-
-          // Rotate around Y axis
-          var rx = d.x * cosA - d.z * sinA;
-          var rz = d.x * sinA + d.z * cosA;
-
-          // Tilt around X axis
-          var ry = d.y * cosT - rz * sinT;
-          var rz2 = d.y * sinT + rz * cosT;
-
-          // Only draw front-facing dots
-          if (rz2 < -0.15) continue;
-
-          // Simple perspective projection
-          var scale = 1 / (1 - rz2 * 0.3);
-          var px = cx + rx * r * scale;
-          var py = cy + ry * r * scale;
-
-          // Opacity based on depth
-          var alpha = 0.1 + 0.9 * ((rz2 + 1) / 2);
-
-          ctx.beginPath();
-          ctx.arc(px, py, DOT_SIZE * scale, 0, Math.PI * 2);
-          ctx.fillStyle = "rgba(255,255,255," + alpha.toFixed(2) + ")";
-          ctx.fill();
-        }
-
-        requestAnimationFrame(draw);
+        controls.update();
+        renderer.render(scene, camera);
       }
+
+      animate();
     })();
   </script>
 </body>
