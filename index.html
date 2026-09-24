@@ -4,10 +4,23 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Ram Thatham</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400&display=swap" rel="stylesheet" />
+  <link rel="preload" href="/fonts/chakra-petch-400.woff2" as="font" type="font/woff2" crossorigin />
+  <link rel="preload" href="/fonts/jetbrains-mono-400.woff2" as="font" type="font/woff2" crossorigin />
   <style>
+    @font-face {
+      font-family: "Chakra Petch";
+      src: url("/fonts/chakra-petch-400.woff2") format("woff2");
+      font-weight: 400;
+      font-display: swap;
+    }
+
+    @font-face {
+      font-family: "JetBrains Mono";
+      src: url("/fonts/jetbrains-mono-400.woff2") format("woff2");
+      font-weight: 400;
+      font-display: swap;
+    }
+
     *,
     *::before,
     *::after {
