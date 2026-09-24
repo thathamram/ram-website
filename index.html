@@ -21,6 +21,19 @@
       font-display: swap;
     }
 
+    :root {
+      --fg: #fff;
+      --fg-2: rgba(255, 255, 255, 0.78);   /* labels, 12.4:1 on black */
+      --fg-3: rgba(255, 255, 255, 0.56);   /* link numbers, 6.5:1 on black */
+      --fg-4: rgba(255, 255, 255, 0.32);   /* crop marks and disabled links */
+      --inset: 40px;
+      --font-name: "Chakra Petch", ui-sans-serif, sans-serif;
+      --font-mono: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace;
+    }
+    @media (max-width: 600px) {
+      :root { --inset: 20px; }
+    }
+
     *,
     *::before,
     *::after {
@@ -62,26 +75,38 @@
       mix-blend-mode: color-dodge;
     }
 
-    .name {
+    ::selection { background: var(--fg); color: #000; }
+
+    .id {
       position: fixed;
-      top: 36px;
-      left: 40px;
-      font-family: "Chakra Petch", sans-serif;
-      font-weight: 400;
-      font-size: 28px;
-      letter-spacing: 0.04em;
-      color: #fff;
+      top: var(--inset);
+      left: var(--inset);
       z-index: 10;
     }
 
+    .name {
+      font: 400 28px/1 var(--font-name);
+      letter-spacing: 0.04em;
+      color: var(--fg);
+    }
+
+    /* drawn to Chakra Petch's metrics: cap height 0.70em, half a cell wide */
     .cursor {
       display: inline-block;
+      width: 0.5em;
+      height: 0.7em;
+      margin-left: 0.12em;
+      background: currentColor;
       animation: blink 1s steps(1) infinite;
     }
 
     @keyframes blink {
       0%, 50% { opacity: 1; }
       50.01%, 100% { opacity: 0; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .cursor { animation: none; }
     }
 
     .buttons {
@@ -125,7 +150,11 @@
 <body>
   <div id="globe-container"></div>
   <div id="globe-overlay" role="presentation" aria-hidden="true"></div>
-  <div class="name">Ram Thatham<span class="cursor">█</span></div>
+  <main>
+    <div class="id">
+      <h1 class="name">Ram Thatham<span class="cursor" aria-hidden="true"></span></h1>
+    </div>
+  </main>
 
   <div class="buttons">
     <a href="https://www.linkedin.com/in/ramthatham" target="_blank" rel="noopener noreferrer" aria-label="LinkedIn">
