@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Not found · Ram Thatham</title>
+  <meta name="robots" content="noindex" />
+  <meta name="theme-color" content="#000000" />
+  <link rel="icon" href="/favicon.ico" sizes="32x32" />
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+  <style>
+    @font-face {
+      font-family: "Chakra Petch";
+      src: url("/fonts/chakra-petch-400.woff2") format("woff2");
+      font-weight: 400;
+      font-display: swap;
+    }
+
+    @font-face {
+      font-family: "JetBrains Mono";
+      src: url("/fonts/jetbrains-mono-400.woff2") format("woff2");
+      font-weight: 400;
+      font-display: swap;
+    }
+
+    :root {
+      --fg: #fff;
+      --fg-2: rgba(255, 255, 255, 0.78);
+      --fg-3: rgba(255, 255, 255, 0.56);
+      --fg-4: rgba(255, 255, 255, 0.32);
+      --inset: 40px;
+      --font-name: "Chakra Petch", ui-sans-serif, sans-serif;
+      --font-mono: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace;
+    }
+    @media (max-width: 600px) {
+      :root { --inset: 20px; }
+    }
+
+    *,
+    *::before,
+    *::after {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      background: #000;
+      color: var(--fg);
+      font-family: var(--font-mono);
+      min-height: 100vh;
+    }
+
+    ::selection { background: var(--fg); color: #000; }
+
+    /* same corners as the home page: the heading where the name sits,
+       the way back where the links sit */
+    .id {
+      position: fixed;
+      top: var(--inset);
+      left: var(--inset);
+    }
+
+    h1 {
+      font: 400 28px/1 var(--font-name);
+      letter-spacing: 0.04em;
+    }
+
+    .cursor {
+      display: inline-block;
+      width: 0.5em;
+      height: 0.7em;
+      margin-left: 0.12em;
+      background: currentColor;
+      animation: blink 1s steps(1) infinite;
+    }
+
+    @keyframes blink {
+      0%, 50% { opacity: 1; }
+      50.01%, 100% { opacity: 0; }
+    }
+
+    p {
+      margin-top: 14px;
+      font: 400 13px/1.5 var(--font-mono);
+      color: var(--fg-3);
+    }
+
+    .links {
+      position: fixed;
+      left: var(--inset);
+      bottom: var(--inset);
+    }
+
+    .links a {
+      position: relative;
+      isolation: isolate;
+      display: inline-flex;
+      align-items: center;
+      padding: 6px 8px;
+      margin-left: -8px;
+      font: 400 12px/1.25 var(--font-mono);
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--fg-2);
+      text-decoration: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .links a::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      z-index: -1;
+      background: var(--fg);
+      opacity: 0;
+    }
+
+    @media (hover: hover) {
+      .links a:hover { color: #000; }
+      .links a:hover::before { opacity: 1; animation: strike 120ms steps(1, end); }
+    }
+
+    .links a:focus-visible {
+      outline: 1px solid var(--fg);
+      outline-offset: 3px;
+      color: #000;
+    }
+    .links a:focus-visible::before { opacity: 1; }
+
+    .links a:active { color: #000; }
+    .links a:active::before { opacity: 0.72; animation: none; }
+
+    @keyframes strike {
+      0%   { opacity: 0.4; }
+      33%  { opacity: 1; }
+      66%  { opacity: 0.7; }
+      100% { opacity: 1; }
+    }
+
+    @media (pointer: coarse) {
+      .links a { min-height: 44px; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .cursor { animation: none; }
+      .links a:hover::before { animation: none; }
+    }
+
+    body::after {
+      content: "";
+      position: fixed;
+      inset: 16px;
+      pointer-events: none;
+      --m: var(--fg-4);
+      --l: 14px;
+      background:
+        linear-gradient(var(--m) 0 0) top left / var(--l) 1px no-repeat,
+        linear-gradient(var(--m) 0 0) top left / 1px var(--l) no-repeat,
+        linear-gradient(var(--m) 0 0) top right / var(--l) 1px no-repeat,
+        linear-gradient(var(--m) 0 0) top right / 1px var(--l) no-repeat,
+        linear-gradient(var(--m) 0 0) bottom left / var(--l) 1px no-repeat,
+        linear-gradient(var(--m) 0 0) bottom left / 1px var(--l) no-repeat,
+        linear-gradient(var(--m) 0 0) bottom right / var(--l) 1px no-repeat,
+        linear-gradient(var(--m) 0 0) bottom right / 1px var(--l) no-repeat;
+    }
+    @media (max-width: 600px) {
+      body::after { inset: 8px; --l: 10px; }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <div class="id">
+      <h1>404<span class="cursor" aria-hidden="true"></span></h1>
+      <p>Nothing at this address.</p>
+    </div>
+    <nav class="links">
+      <a href="/">Back to thatham.com</a>
+    </nav>
+  </main>
+</body>
+</html>
