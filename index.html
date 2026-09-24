@@ -199,6 +199,29 @@
     @media (prefers-reduced-motion: reduce) {
       .links a:hover::before { animation: none; }
     }
+
+    /* crop marks: frame the orb from the corners, never over it */
+    body::after {
+      content: "";
+      position: fixed;
+      inset: 16px;
+      z-index: 10;
+      pointer-events: none;
+      --m: var(--fg-4);
+      --l: 14px;
+      background:
+        linear-gradient(var(--m) 0 0) top left / var(--l) 1px no-repeat,
+        linear-gradient(var(--m) 0 0) top left / 1px var(--l) no-repeat,
+        linear-gradient(var(--m) 0 0) top right / var(--l) 1px no-repeat,
+        linear-gradient(var(--m) 0 0) top right / 1px var(--l) no-repeat,
+        linear-gradient(var(--m) 0 0) bottom left / var(--l) 1px no-repeat,
+        linear-gradient(var(--m) 0 0) bottom left / 1px var(--l) no-repeat,
+        linear-gradient(var(--m) 0 0) bottom right / var(--l) 1px no-repeat,
+        linear-gradient(var(--m) 0 0) bottom right / 1px var(--l) no-repeat;
+    }
+    @media (max-width: 600px) {
+      body::after { inset: 8px; --l: 10px; }
+    }
   </style>
 </head>
 <body>
