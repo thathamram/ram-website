@@ -30,6 +30,7 @@
       --fg-2: rgba(255, 255, 255, 0.78);   /* labels, 12.4:1 on black */
       --fg-3: rgba(255, 255, 255, 0.56);   /* link numbers, 6.5:1 on black */
       --fg-4: rgba(255, 255, 255, 0.32);   /* crop marks and disabled links */
+      --ball: #a8d544;                     /* tennis-ball green, the /tennis link */
       --inset: 40px;
       --font-name: "Chakra Petch", ui-sans-serif, sans-serif;
       --font-mono: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace;
@@ -155,6 +156,11 @@
       .links a:hover::before { opacity: 1; animation: strike 120ms steps(1, end); }
     }
 
+    /* the tennis link wears the ball color, and fills with it on hover */
+    .links a.ball { color: var(--ball); }
+    .links a.ball::before { background: var(--ball); }
+    @media (hover: hover) { .links a.ball:hover { color: #000; } }
+
     .links a:focus-visible {
       outline: 1px solid var(--fg);
       outline-offset: 3px;
@@ -235,6 +241,7 @@
       <a href="https://www.linkedin.com/in/ramthatham" target="_blank" rel="noopener noreferrer" aria-label="LinkedIn (opens in a new tab)"><span class="idx" aria-hidden="true">01</span>LinkedIn<span class="ext" aria-hidden="true">↗</span></a>
       <a href="https://github.com/thathamram" target="_blank" rel="noopener noreferrer" aria-label="GitHub (opens in a new tab)"><span class="idx" aria-hidden="true">02</span>GitHub<span class="ext" aria-hidden="true">↗</span></a>
       <a href="mailto:info@thatham.com" aria-label="Email"><span class="idx" aria-hidden="true">03</span>Email</a>
+      <a class="ball" href="/tennis/"><span class="idx" aria-hidden="true">04</span>Tennis</a>
     </nav>
   </main>
 
