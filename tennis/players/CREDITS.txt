@@ -1,0 +1,90 @@
+Player portraits on thatham.com/tennis
+
+Each portrait is a dot drawing made from the photo listed under the player's
+name. Changes: background removed, cropped, redrawn as a dot matrix.
+The drawings are licensed CC BY-SA 4.0:
+https://creativecommons.org/licenses/by-sa/4.0/
+
+Jannik Sinner
+  Photo: P20250907DT-0873 President Donald Trump attends the U.S. Open Men’s Championship.jpg
+  By: The White House
+  License: public domain (work of the US federal government)
+  Source: https://commons.wikimedia.org/wiki/File:P20250907DT-0873_President_Donald_Trump_attends_the_U.S._Open_Men%E2%80%99s_Championship.jpg
+
+Carlos Alcaraz
+  Photo: Carlos Alcaraz US Open 2025 (cropped).jpg
+  By: The White House (Daniel Torok)
+  License: public domain (work of the US federal government)
+  Source: https://commons.wikimedia.org/wiki/File:Carlos_Alcaraz_US_Open_2025_%28cropped%29.jpg
+
+Alexander Zverev
+  Photo: Zverev BMW Open 2026.jpg
+  By: Partynia
+  License: CC BY 4.0, https://creativecommons.org/licenses/by/4.0/
+  Source: https://commons.wikimedia.org/wiki/File:Zverev_BMW_Open_2026.jpg
+
+Novak Djokovic
+  Photo: Novak Djokovic US Open 2026 (cropped2).png
+  By: AndrewHenkelman
+  License: CC BY-SA 4.0, https://creativecommons.org/licenses/by-sa/4.0/
+  Source: https://commons.wikimedia.org/wiki/File:Novak_Djokovic_US_Open_2026_%28cropped2%29.png
+
+Arthur Fils
+  Photo: Arthur Fils - Roland-Garros 2025 - forehand.jpg
+  By: Kuberzog
+  License: CC BY-SA 4.0, https://creativecommons.org/licenses/by-sa/4.0/
+  Source: https://commons.wikimedia.org/wiki/File:Arthur_Fils_-_Roland-Garros_2025_-_forehand.jpg
+
+Daniil Medvedev
+  Photo: Daniil Medvedev US Open 2023 (cropped).jpg
+  By: Amaury Laporte
+  License: CC BY 2.0, https://creativecommons.org/licenses/by/2.0/
+  Source: https://commons.wikimedia.org/wiki/File:Daniil_Medvedev_US_Open_2023_%28cropped%29.jpg
+
+Alex de Minaur
+  Photo: De Minaur Rosmalen (cropped2).jpg
+  By: Tvx1
+  License: CC BY-SA 4.0, https://creativecommons.org/licenses/by-sa/4.0/
+  Source: https://commons.wikimedia.org/wiki/File:De_Minaur_Rosmalen_%28cropped2%29.jpg
+
+Rafael Jódar
+  Photo: Rafael Jódar Roland Garros 2026 (cropped).jpg
+  By: Crosscourt View
+  License: CC BY-SA 4.0, https://creativecommons.org/licenses/by-sa/4.0/
+  Source: https://commons.wikimedia.org/wiki/File:Rafael_J%C3%B3dar_Roland_Garros_2026_%28cropped%29.jpg
+
+Alejandro Davidovich Fokina
+  Photo: Alejandro Davidovich Fokina (2023 US Open) 13.jpg
+  By: Hameltion
+  License: CC BY-SA 4.0, https://creativecommons.org/licenses/by-sa/4.0/
+  Source: https://commons.wikimedia.org/wiki/File:Alejandro_Davidovich_Fokina_%282023_US_Open%29_13.jpg
+
+Ben Shelton
+  Photo: BenShelton2025AO (cropped).jpg
+  By: 350z33
+  License: CC BY-SA 4.0, https://creativecommons.org/licenses/by-sa/4.0/
+  Source: https://commons.wikimedia.org/wiki/File:BenShelton2025AO_%28cropped%29.jpg
+
+Tommy Paul
+  Photo: Tommy Paul (2023 US Open) 02.jpg
+  By: Hameltion
+  License: CC BY-SA 4.0, https://creativecommons.org/licenses/by-sa/4.0/
+  Source: https://commons.wikimedia.org/wiki/File:Tommy_Paul_%282023_US_Open%29_02.jpg
+
+Jiří Lehečka
+  Photo: Jiří Lehečka (2023 US Open) 05.jpg
+  By: Hameltion
+  License: CC BY-SA 4.0, https://creativecommons.org/licenses/by-sa/4.0/
+  Source: https://commons.wikimedia.org/wiki/File:Ji%C5%99%C3%AD_Lehe%C4%8Dka_%282023_US_Open%29_05.jpg
+
+João Fonseca
+  Photo: Joao Fonseca, Swiss Indoors Basel 2025.jpg
+  By: Swiss Indoors
+  License: CC BY-SA 4.0, https://creativecommons.org/licenses/by-sa/4.0/
+  Source: https://commons.wikimedia.org/wiki/File:Joao_Fonseca%2C_Swiss_Indoors_Basel_2025.jpg
+
+Learner Tien
+  Photo: Learner Tien (2024 US Open) 02.jpg
+  By: Hameltion
+  License: CC BY-SA 4.0, https://creativecommons.org/licenses/by-sa/4.0/
+  Source: https://commons.wikimedia.org/wiki/File:Learner_Tien_%282024_US_Open%29_02.jpg

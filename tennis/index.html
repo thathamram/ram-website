@@ -364,6 +364,20 @@
     }
     @media (max-width: 600px) { .pricer { padding: 18px 16px; } }
 
+    /* the two players as dot portraits, centered in the side margins on wide screens */
+    .pricer { position: relative; }
+    .portrait {
+      --g: min(calc((100vw - var(--rail) - var(--col)) / 4 - 110px), 72px);
+      position: absolute;
+      top: -1px;
+      width: 220px;
+      display: none;
+    }
+    .portrait.a { right: calc(100% + var(--rail) + var(--g)); }
+    .portrait.b { left: calc(100% + var(--g)); }
+    .portrait img { display: block; width: 100%; height: auto; }
+    @media (min-width: 1380px) { .portrait { display: block; } }
+
     .pick {
       display: grid;
       grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
@@ -729,6 +743,8 @@
       color: var(--fg-3);
     }
     footer .credits p + p { margin-top: 10px; }
+    footer .credits a { text-underline-offset: 2px; }
+    @media (hover: hover) { footer .credits a:hover { color: var(--fg); } }
     footer nav { margin-top: 28px; display: flex; flex-wrap: wrap; gap: 4px 24px; }
     footer nav .navlink {
       font-size: 12px;
@@ -797,6 +813,8 @@
           <p>Every pair below was priced by the real model before this page loaded. Nothing runs on a server.</p>
 
           <div class="pricer">
+            <aside class="portrait a" aria-hidden="true"><img id="ia" alt="" /></aside>
+            <aside class="portrait b" aria-hidden="true"><img id="ib" alt="" /></aside>
             <div class="pick">
               <div class="field">
                 <label for="pa">Player</label>
@@ -962,6 +980,7 @@
       <div>
         <div class="credits">
           <p>Match data: Jeff Sackmann's tennis_atp (CC BY-NC-SA 4.0), pinned in June 2026, and the TML database (CC BY-NC-SA) for later results. The numbers and charts on this page come from that data and carry the same terms. The project is non-commercial.</p>
+          <p>Player portraits: dot drawings of photos from Wikimedia Commons, used under CC BY, CC BY-SA and public domain terms. The drawings are CC BY-SA 4.0. <a href="players/CREDITS.txt">Photo credits</a>.</p>
           <p>Built with AI coding agents I direct, mostly Claude Code. The repo is private; code on request.</p>
         </div>
         <nav>
@@ -1027,6 +1046,32 @@
 
     function pct(x) { return Math.round(x * 100) + "%"; }
 
+    // ---------- portraits ----------
+    // only fetched when the margins are wide enough to show them
+    var FACE = {
+      "206173": "sinner",
+      "207989": "alcaraz",
+      "100644": "zverev",
+      "104925": "djokovic",
+      "209950": "fils",
+      "106421": "medvedev",
+      "200282": "de-minaur",
+      "212588": "jodar",
+      "200221": "davidovich-fokina",
+      "210097": "shelton",
+      "126205": "paul",
+      "208103": "lehecka",
+      "211663": "fonseca",
+      "210530": "tien"
+    };
+    var wide = window.matchMedia("(min-width: 1380px)");
+    function portraits() {
+      if (!wide.matches) return;
+      $("ia").src = "players/" + FACE[pa.value] + ".png";
+      $("ib").src = "players/" + FACE[pb.value] + ".png";
+    }
+    wide.addEventListener("change", portraits);
+
     function render() {
       if (pa.value === pb.value) {
         // picking the same player twice swaps the pair instead
@@ -1074,6 +1119,7 @@
         "Ratings as of " + D.as_of + ". " + (f === "bo5" ? "Grand Slam, best of 5" : "Masters 1000, best of 3") +
         ", quarterfinal. The model isn't perfectly symmetric, so each price averages both seatings; this one's seat gap is " +
         (r.gap * 100).toFixed(1) + " points.";
+      portraits();
     }
 
     [pa, pb].forEach(function (el) { el.addEventListener("change", render); });
