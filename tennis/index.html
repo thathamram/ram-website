@@ -378,6 +378,17 @@
     .portrait img { display: block; width: 100%; height: auto; }
     @media (min-width: 1380px) { .portrait { display: block; } }
 
+    /* narrower screens have no margins, so the pair stands over their numbers instead */
+    .duo {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      gap: 16px;
+      margin-bottom: 14px;
+    }
+    .duo img { display: block; width: min(150px, 44%); height: auto; }
+    @media (min-width: 1380px) { .duo { display: none; } }
+
     .pick {
       display: grid;
       grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
@@ -846,6 +857,7 @@
             </div>
 
             <div class="out" aria-live="polite">
+              <div class="duo" aria-hidden="true"><img id="da" alt="" /><img id="db" alt="" /></div>
               <div class="sides">
                 <div class="side a"><div class="who" id="na"></div><div class="pct" id="ppa"></div></div>
                 <div class="side b"><div class="who" id="nb"></div><div class="pct" id="ppb"></div></div>
@@ -1047,7 +1059,7 @@
     function pct(x) { return Math.round(x * 100) + "%"; }
 
     // ---------- portraits ----------
-    // only fetched when the margins are wide enough to show them
+    // only the pair on screen is fetched: the margins on wide screens, over the numbers otherwise
     var FACE = {
       "206173": "sinner",
       "207989": "alcaraz",
@@ -1065,10 +1077,13 @@
       "210530": "tien"
     };
     var wide = window.matchMedia("(min-width: 1380px)");
+    function show(img, id) {
+      // a player with no portrait yet shows nothing rather than a broken image
+      if (FACE[id]) img.src = "players/" + FACE[id] + ".png"; else img.removeAttribute("src");
+    }
     function portraits() {
-      if (!wide.matches) return;
-      $("ia").src = "players/" + FACE[pa.value] + ".png";
-      $("ib").src = "players/" + FACE[pb.value] + ".png";
+      show($(wide.matches ? "ia" : "da"), pa.value);
+      show($(wide.matches ? "ib" : "db"), pb.value);
     }
     wide.addEventListener("change", portraits);
 
