@@ -31,6 +31,7 @@
       --fg-3: rgba(255, 255, 255, 0.56);   /* link numbers, 6.5:1 on black */
       --fg-4: rgba(255, 255, 255, 0.32);   /* crop marks and disabled links */
       --ball: #a8d544;                     /* tennis-ball green, the /tennis link */
+      --tag: #ff6a13;                      /* shelf-tag orange, the /snacks link */
       --inset: 40px;
       --font-name: "Chakra Petch", ui-sans-serif, sans-serif;
       --font-mono: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace;
@@ -161,6 +162,11 @@
     .links a.ball::before { background: var(--ball); }
     @media (hover: hover) { .links a.ball:hover { color: #000; } }
 
+    /* the snacks link does the same in shelf-tag orange */
+    .links a.tag { color: var(--tag); }
+    .links a.tag::before { background: var(--tag); }
+    @media (hover: hover) { .links a.tag:hover { color: #000; } }
+
     .links a:focus-visible {
       outline: 1px solid var(--fg);
       outline-offset: 3px;
@@ -200,6 +206,11 @@
       }
       .links a { margin: 0 -8px; }
       .links .idx { display: none; }
+    }
+
+    /* five labels on a phone: the arrows go so the row keeps its air */
+    @media (max-aspect-ratio: 1/1) and (max-width: 440px) {
+      .links .ext { display: none; }
     }
 
     @media (prefers-reduced-motion: reduce) {
@@ -242,6 +253,7 @@
       <a href="https://github.com/thathamram" target="_blank" rel="noopener noreferrer" aria-label="GitHub (opens in a new tab)"><span class="idx" aria-hidden="true">02</span>GitHub<span class="ext" aria-hidden="true">↗</span></a>
       <a href="mailto:info@thatham.com" aria-label="Email"><span class="idx" aria-hidden="true">03</span>Email</a>
       <a class="ball" href="/tennis/"><span class="idx" aria-hidden="true">04</span>Tennis</a>
+      <a class="tag" href="/snacks/"><span class="idx" aria-hidden="true">05</span>Snacks</a>
     </nav>
   </main>
 
